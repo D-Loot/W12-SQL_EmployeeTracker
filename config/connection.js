@@ -1,17 +1,14 @@
-import Sequelize from 'sequelize';
-// require('dotenv').config();
-import dotenv from "dotenv";
-dotenv.config()
+const mysql = require("mysql2");
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_DATABASE,
-  process.env.DB_PASSWORD,
+const dbConnection = mysql.createConnection(
   {
-    host: 'localhost',
-    dialect: 'mysql',
-    database: "employees.db"
-  }
+  host: "localhost",
+  user: "root",
+  password: "HP$38uZ61BbMth0",
+  database: "employees_db"
+},
+console.log(`Connected to the employee_db database.`)
 );
 
-export default sequelize
+// NOTE: This program looks to access 'mysql/promise' not just mysql.
+module.exports = dbConnection.promise();
