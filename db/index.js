@@ -1,52 +1,69 @@
-import mysql from 'mysql2';
-import connection from "../config/connection.js";
+// const mysql = require('mysql2');
+const dbConnection = require("../config/connection.js");
 
-const db = mysql.createConnection(connection);
+// In order to connect the database to a query, I need to create an object, assign a connection to it and use it in the query.
+// https://www.tabnine.com/code/javascript/modules/mysql2
 
-const databaseQuery = {
-  queryAllDepartments(){
-    return db.query(`Select * FROM departments.db`, function (err, result) {
-      if (err) {
-        console.log(err);
-      }
-    })
-  },
-  queryAllRoles(){
-    db.query(`DELETE FROM favorite_books`, variable, (err, result) => {
-      if (err) {
-        console.log(err);
-      }
-    })
-  },
-  queryAllEmployees(){
-    db.query(`DELETE FROM favorite_books`, variable, (err, result) => {
-      if (err) {
-        console.log(err);
-      }
-    })
-
-  },
-  queryAddDepartment(){
-
-  },
-  queryAddRole(){
-
-  },
-  queryAddEmployee(){
-
-  },
-  queryAddEmployeeRole(){
-
+class Database {
+  constructor(dbConnection) {
+    this.dbConnection = dbConnection;
   }
-}
+  queryAllDepartments(){
+    return this.dbConnection.query(`
+    SELECT
+    departments.id, departments.dept_name
+    FROM
+    departments;`)
+  }
+  queryAllRoles(){
+    return this.dbConnection.query(`
+    SELECT
+    roles.id, roles.title, roles.salary, roles.department_id,
+    departments.dept_name
 
+    FROM roles
 
-// Query database
-//   db.query('SELECT * FROM favorite_books', function (err, results) {
-//     console.log(results);
-//   });
-// }
+    JOIN departments ON roles.department_id = departments.id
 
-// Query database
+    ORDER BY
+    roles.id ASC;`)
+  }
+  queryAllEmployees(){
+    return this.dbConnection.query(`
+    SELECT
+    employee.id, employee.first_name, employee.last_name, employee.manager_id, roles.title, roles.salary,
+    departments.dept_name
 
-export default databaseQuery;
+    FROM employee
+    JOIN roles ON employee.role_id = roles.id
+    JOIN departments ON roles.department_id = departments.id
+
+    ORDER BY
+    employee.id ASC;`
+    )
+  }
+
+  queryAddDepartment(newDept){
+    return this.dbConnection.query(`
+    INSERT INTO departments(dept_name)
+    VALUES (?)`,newDept)
+  }
+  queryAddRole(title,salary,deptID){
+    return this.dbConnection.query(`
+    INSERT INTO roles(title,salary,department_id)
+    VALUES (?,?,?)`,[title,salary,deptID])
+  }
+  queryAddEmployee(first, last, role, manager){
+    return this.dbConnection.query(`
+    INSERT INTO employee(first_name,last_name,role_id,manager_id)
+    VALUES (?,?,?,?)`,[first, last, role, manager])
+  }
+  queryUpdateEmployeeRole(employeeID,roleID){
+    return this.dbConnection.query(`
+    UPDATE employee
+    SET role_id = ?
+    WHERE id = ?;`,[roleID,employeeID])
+  }
+  }
+
+module.exports = new Database(dbConnection)

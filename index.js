@@ -1,94 +1,60 @@
-// with "import" method change package json '"type": module'
+const inquirer = require('inquirer');
+const logo = require("asciiart-logo");
+const db = require("./db/index.js");
+require("console.table");
 
+init()
 
-
-// see 13-08 for sequalize function
-// import express from "express";
-// const express = require('express');
-
-// Import inquire
-import inquirer from 'inquirer';
-// const inquirer = require('inquirer');
-
-// import mysql2
-
-// import asciiart-logo
-// import asciiart-logo
-import asciiartlogo from "asciiart-logo";
-
-import db from "./db/index.js"
-
-function addTeamMembers(){
-  inquirer.prompt(
-    [{
-      message: "Please select from the following:\n",
-      choices: ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role"],
-      name: "options",
-    },
-    ]
-  )
-  .then((response) =>
-    {
-      switch(response.options) {
-      case "view all departments":
-        viewAllDepartments();
-        break;
-      case "view all roles":
-        viewAllRoles();
-        break;
-      case "view all employees":
-        viewAllEmployees();
-        break;
-      case "add a department":
-        addDepartment();
-        break;
-      case "add a role":
-        addRole();
-        break;
-      case "add an employee":
-        addEmployee();
-        break;
-      case "update an employee role":
-        addEmployeeRole();
-        break;
-      }
-    }
-  )
+function init() {
+  const logoHeader = logo({ name: "Employee Manager" }).render();
+  console.log(logoHeader);
+  loadQs();
 }
 
-function init(){
+
+function loadQs(){
     inquirer.prompt(
     [{
+      type: "list",
       message: "Please select from the following:\n",
-      choices: ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role"],
+      choices: [
+        "View All Departments",
+        "View All Roles",
+        "View All Employees",
+        "Add a Department",
+        "Add a Role",
+        "Add an Employee",
+        "Update an Employee Role",
+        "Quit"],
       name: "options",
     },
     ]
   )
-  .then((response) =>
-    {
+  .then((response) => {
       switch(response.options) {
-      case "view all departments":
+      case "View All Departments":
         viewAllDepartments();
         break;
-      case "view all roles":
+      case "View All Roles":
         viewAllRoles();
         break;
-      case "view all employees":
+      case "View All Employees":
         viewAllEmployees();
         break;
-      case "add a department":
+      case "Add a Department":
         addDepartment();
         break;
-      case "add a role":
+      case "Add a Role":
         addRole();
         break;
-      case "add an employee":
+      case "Add an Employee":
         addEmployee();
         break;
-      case "update an employee role":
-        addEmployeeRole();
+      case "Update an Employee Role":
+        updateEmployeeRole();
         break;
+      default:
+        quit();
       }
     }
   )
@@ -120,63 +86,181 @@ function init(){
     // WHEN I choose to update an employee role
         // THEN I am prompted to select an employee to update and their new role and this information is updated in the database
 
-
-
-
-
-// const app = express();
-// const PORT = process.env.PORT || 5000;
-
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-
-// // turn on routes
-// app.use(routes);
-
-
-// TODO : add all functions
-// Todo : correctquery functions to take variables and make queries based on the variables from "db.query..."
-// todo: display the results from the variables
 function viewAllDepartments(){
-  db.queryAllDepartments().then((response) =>{
-    console.log(response);
-  })
+  db.queryAllDepartments().then(([response]) =>{
+    console.table(response)
+  }).then(()=>loadQs());
 }
 
 function viewAllRoles(){
-//   inquirer.prompt(
-//   [{
-//     message: "Please select from the following:\n",
-//     choices: ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role"],
-//     name: "options",
-//   },
-//   ]
-// )
-// .then((response) =>
-// {
-//   switch(response.options) {
-//   case "view all departments":
-//     viewAllDepartments();
-//     break;
-//   case "view all roles":
+  db.queryAllRoles().then(([response]) =>{
+    console.table(response)
+  }).then(()=>loadQs());
 }
 
 function viewAllEmployees(){
-
+  db.queryAllEmployees().then(([response]) =>{
+    console.table(response)
+  }).then(()=>loadQs());
 }
 
 function addDepartment(){
+  inquirer.prompt(
+    [{
+      message: "What is the name of the new department?\n",
+      name: "dept_name",
+    },]
+  )
+  .then((response) =>
+  db.queryAddDepartment(response.dept_name))
 
+  .then(()=>loadQs());
 }
 
 function addRole(){
+  // What is the name of the new role?
+  // What is the salary of the new role?
+  // Which department is the new role in?
+  db.queryAllDepartments()
+  .then(([response]) =>{
+    const department = response.map(({id,dept_name})=>({
+      name: dept_name,
+      value: id
+    }));
 
+    inquirer.prompt(
+      [
+        {
+        type: "input",
+        message: "What is the name of the new Role?\n",
+        name: "title",
+      },
+      {
+        type: "input",
+        message: "What is the salary of the new Role?\n",
+        name: "salary",
+      }
+      ,
+      {
+        type: "list",
+        message: "Which department is the new role in?\n",
+        choices: department,
+        name: "deptID"
+      }
+      ]
+    )
+
+  .then((response) =>{
+
+    db.queryAddRole(response.title,response.salary,response.deptID)
+  })
+
+  .then(()=>loadQs());
+})
 }
 
 function addEmployee(){
+  // What is the first name of the new employee?
+  // What is the last name of the new employee?
+  inquirer.prompt(
+    [{
+      message: "What is the first name of the new Employee?\n",
+      name: "first",
+    },{
+      message: "What is the last name of the new Employee?\n",
+      name: "last",
+    },]
+  )
+  .then((response) =>{
+    let empFirstName = response.first;
+    let emqLastName = response.last;
 
+    // In which position will the new employee work?
+    db.queryAllRoles()
+      .then(([response]) => {
+        const roles = response.map(({id,title})=>({
+          name: title,
+          value: id
+        }));
+        inquirer.prompt(
+          [{
+            type: "list",
+            message: "What is the role of the new Employee?\n",
+            name: "role",
+            choices: roles
+          },]
+        )
+        .then(response=>{
+          let empRole = response.role;
+
+          // Who is the manager of the new employee?
+          db.queryAllEmployees()
+          .then(([response]) => {
+            const employees = response.map(({id,first_name,last_name})=>({
+              name: `${first_name} ${last_name}`,
+              value: id
+            }));
+
+            inquirer.prompt(
+              [{
+                type: "list",
+                message: "Who is the manager of the new Employee?\n",
+                name: "manager",
+                choices: employees,
+              },]
+            )
+            .then(response =>{
+              let empManager = response.manager
+              db.queryAddEmployee(empFirstName,emqLastName,empRole,empManager)
+            })
+            .then(()=>loadQs());
+          });
+        });
+      });
+  });
 }
 
-function addEmployeeRole(){
+function updateEmployeeRole(){
+  // Which Employee will be updated?
+  db.queryAllEmployees()
+    .then(([response])=>{
+      const employees = response.map(({id,first_name, last_name})=>({
+        name: `${first_name} ${last_name}`,
+        value: id
+      }))
+    // What is the new role for the Employee?
+      inquirer.prompt(
+        [{
+          type: "list",
+          message: "What is the name of the Employee?\n",
+          choices: employees,
+          name: "employee",
+        },])
+    .then((response)=>{
+      let employeeID = response.employee;
+      db.queryAllRoles()
+      .then(([response])=>{
+        const roles = response.map(({id,title})=>({
+          name: title,
+          value: id
+        }))
+        inquirer.prompt(
+          [{
+            type: "list",
+            message: "What is the new role for the Employee?\n",
+            choices: roles,
+            name: "role",
+          }]
+        )
+        .then((response) =>
+          db.queryUpdateEmployeeRole(employeeID,response.role))
+        .then(()=>loadQs());
+      });
+    })
+  })
+}
 
+function quit(){
+  console.log("END");
+  process.exit()
 }

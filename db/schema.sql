@@ -17,10 +17,6 @@ CREATE TABLE roles (
   INDEX department_index (department_id),
   CONSTRAINT fk_department_id FOREIGN KEY (department_id)
   REFERENCES departments(id)
-
-  -- department_id INT NOT NULL
-  -- FOREIGN KEY (department_id)
-  -- REFERENCES departments(id)
 );
 
 CREATE TABLE employee (
