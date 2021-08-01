@@ -7,7 +7,6 @@ const dbConnection = mysql.createConnection(
   password: "HP$38uZ61BbMth0",
   database: "employees_db"
 },
-console.log(`Connected to the employee_db database.`)
 );
 
 // NOTE: This program looks to access 'mysql/promise' not just mysql.
